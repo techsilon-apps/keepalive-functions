@@ -8,12 +8,8 @@ auto-paused after 7 days of inactivity.
 
 Supabase pauses free-tier projects after ~7 days without activity. Activity is measured as
 database/API traffic — **a deploy does not count**, only real queries/connections. This job
-performs a genuine transaction cycle against each configured project every 2 days, which
+performs a genuine transaction cycle against each configured project every day, which
 resets the inactivity timer.
-
-> **Note on intent.** This works around Supabase's inactivity cost-saving, which is a ToS
-> gray area. Keep it genuine and light (this design does: a few statements every 2 days).
-> The honest long-term fix for a project with real traffic is the Supabase Pro plan.
 
 ## How it works
 
@@ -48,10 +44,10 @@ Set `"enabled": false` to park a project without removing it.
 
 ## Schedule
 
-`.github/workflows/keepalive.yml` runs every ~2 days (`cron: '17 6 */2 * *'`) + manual
-**Run workflow** button. The 2-day cadence keeps a comfortable margin under the 7-day
-threshold even if a scheduled run is delayed. A tiny heartbeat commit each run keeps the
-repo active so GitHub never auto-disables the schedule (its 60-day-inactivity rule).
+`.github/workflows/keepalive.yml` runs daily (`cron: '17 6 * * *'`) + manual
+**Run workflow** button. Daily keeps a comfortable margin under the 7-day threshold even
+if a scheduled run is delayed or dropped. A tiny heartbeat commit each run keeps the repo
+active so GitHub never auto-disables the schedule (its 60-day-inactivity rule).
 
 **Public repo** is recommended (unlimited Actions minutes; the repo holds no secrets). The
 only rule: triggers stay `schedule` + `workflow_dispatch` — **never** `pull_request`, so

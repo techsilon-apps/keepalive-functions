@@ -5,9 +5,9 @@ name: supabase-keepalive
 # the connection-string secrets to forked PRs.
 on:
   schedule:
-    # Every ~2 days at 06:17 UTC. 2-day cadence gives margin under Supabase's
-    # 7-day inactivity threshold even if GitHub delays/drops a scheduled run.
-    - cron: '17 6 */2 * *'
+    # Daily at 06:17 UTC. Daily gives margin under Supabase's 7-day inactivity
+    # threshold even if GitHub delays/drops a scheduled run.
+    - cron: '17 6 * * *'
   workflow_dispatch:
 
 permissions:
