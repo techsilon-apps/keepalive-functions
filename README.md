@@ -26,21 +26,68 @@ Per project, each run:
 Connection is direct Postgres over the **IPv4 pooler** string (`prepare:false` → transaction-pooler
 safe). GitHub Actions is IPv4-only; Supabase "direct" is IPv6-only, so the pooler string is required.
 
-## Onboard a project (2 steps, no workflow edit)
+## Onboard a new project or account
 
-1. Add an entry to [`projects.json`](./projects.json):
-   ```json
-   { "label": "my-project", "envVar": "SUPABASE_DB_URL_MY_PROJECT", "sampleTables": [] }
-   ```
-2. Add a repo secret named exactly that `envVar`, holding the project's **Transaction pooler**
-   connection string (Supabase → Project → Connect → Transaction pooler):
-   ```bash
-   gh secret set SUPABASE_DB_URL_MY_PROJECT --repo <owner>/keepalive-functions
-   ```
+Works for any Supabase project in any account — a Supabase account is **not** a GitHub
+account, so this one repo can keep alive projects from all of your accounts. Onboarding is
+config + one secret; **no workflow edit is ever needed** (all secrets reach the job via
+`toJSON(secrets)`, masked in logs).
 
-All secrets reach the job via `toJSON(secrets)` (masked in logs), so no new project needs a
-workflow change. `sampleTables` are optional and schema-qualified (e.g. `pulsilon.checks`).
-Set `"enabled": false` to park a project without removing it.
+### Step 1 — Register it in `projects.json`
+
+Copy an existing block, paste it into the `projects` array, and update the fields:
+
+```json
+{
+  "label": "my-project",
+  "envVar": "SUPABASE_DB_URL_MY_PROJECT",
+  "sampleTables": []
+}
+```
+
+- **`label`** — any human name for logs (e.g. `sideproject-prod`).
+- **`envVar`** — the exact name of the GitHub secret you'll create in Step 3. Convention:
+  `SUPABASE_DB_URL_<PROJECT>`, uppercase, no spaces.
+- **`sampleTables`** — *optional*. Schema-qualified tables to also read a row-count from each
+  run (e.g. `"public.profiles"`, `"pulsilon.checks"`). Leave `[]` if unsure — the heartbeat
+  table's own write/read/delete is enough to count as activity. Missing tables are harmless
+  (guarded), so nothing breaks if a name is wrong.
+- Optional: add `"enabled": false` to park a project without deleting its block.
+
+### Step 2 — Get that project's IPv4 pooler connection string
+
+1. Open the project in the [Supabase dashboard](https://supabase.com/dashboard).
+2. Click **Connect** (top bar).
+3. Under **Connection string**, choose the **Transaction pooler** tab (Session pooler also
+   works — both are IPv4). It looks like:
+   ```
+   postgres://postgres.<ref>:[YOUR-PASSWORD]@aws-0-<region>.pooler.supabase.com:6543/postgres
+   ```
+   - ✅ Must contain `…pooler.supabase.com` — that is the **IPv4** path GitHub Actions needs.
+   - ❌ Do **not** use **Direct connection** (`db.<ref>.supabase.co`) — it is IPv6-only and
+     fails in Actions.
+4. Replace `[YOUR-PASSWORD]` with the project's real database password. If you don't have it:
+   **Settings → Database → Database password → Reset database password** generates a new one
+   (safe to reset as long as nothing live is currently using the old password).
+
+### Step 3 — Add the secret (named exactly the `envVar`)
+
+Easiest via the web UI (keeps the value out of shell history):
+
+> repo → **Settings → Secrets and variables → Actions → New repository secret** →
+> name = the `envVar` from Step 1, value = the full pooler URL from Step 2.
+
+Or via CLI:
+
+```bash
+echo "postgres://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres" \
+  | gh secret set SUPABASE_DB_URL_MY_PROJECT --repo <owner>/keepalive-functions
+```
+
+### Step 4 — Verify
+
+Commit/push the `projects.json` change, then Actions tab → *supabase-keepalive* →
+**Run workflow**. The log should show `OK my-project: wrote #… heartbeats=… …`.
 
 ## Schedule
 
