@@ -1,0 +1,15 @@
+{
+  "$comment": "One entry per Supabase project. NO SECRETS HERE. `envVar` names the GitHub Actions secret (or local env var) that holds that project's IPv4 pooler connection string. Onboard a new project = add an entry here + add the matching secret. `sampleTables` are optional schema-qualified tables to read row-counts from (guarded; a missing table is harmless). Set `enabled:false` to park a project without deleting it.",
+  "projects": [
+    {
+      "label": "techsilon-dev",
+      "envVar": "SUPABASE_DB_URL_TECHSILON_DEV",
+      "sampleTables": ["pulsilon.checks", "pulsilon.scores", "pulsilon.subscriptions"]
+    },
+    {
+      "label": "techsilon-prod",
+      "envVar": "SUPABASE_DB_URL_TECHSILON_PROD",
+      "sampleTables": []
+    }
+  ]
+}

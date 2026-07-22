@@ -1,0 +1,14 @@
+{
+  "name": "keepalive-functions",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Scheduled read/write/delete keepalive for free-tier Supabase projects across any account, to prevent 7-day inactivity auto-pause.",
+  "scripts": {
+    "keepalive": "node keepalive.mjs",
+    "keepalive:local": "node --env-file=.env keepalive.mjs"
+  },
+  "dependencies": {
+    "postgres": "^3.4.5"
+  }
+}
