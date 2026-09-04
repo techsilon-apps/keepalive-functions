@@ -4,7 +4,7 @@
     {
       "label": "techsilon-dev",
       "envVar": "SUPABASE_DB_URL_TECHSILON_DEV",
-      "sampleTables": ["pulsilon.checks", "pulsilon.scores", "pulsilon.subscriptions"]
+      "sampleTables": []
     },
     {
       "label": "techsilon-prod",
