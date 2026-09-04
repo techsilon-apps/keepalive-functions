@@ -21,27 +21,50 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
 
-      - run: npm install
+      - run: npm ci
 
       - name: Ping all projects (read / write / delete)
         run: node keepalive.mjs
         env:
-          # All repo secrets, as one JSON blob (masked in logs). This is what lets
-          # onboarding a new project be config-only: no workflow edit needed.
-          SECRETS_JSON: ${{ toJSON(secrets) }}
+          # Each connection string is passed explicitly, one line per project.
+          #
+          # Do NOT replace this with `SECRETS_JSON: ${{ toJSON(secrets) }}`. It is tempting
+          # (it makes onboarding config-only), but GitHub's workflow scanner reads bundling
+          # every secret into one variable as a possible exfiltration pattern, marks the run
+          # "action_required", and dispatches NO jobs. The keepalive then stops silently --
+          # no failure email, no log -- until someone notices projects have been paused.
+          # This happened on 2026-09-01..09-03. Explicit lines cost one edit per project.
+          SUPABASE_DB_URL_TECHSILON_DEV: ${{ secrets.SUPABASE_DB_URL_TECHSILON_DEV }}
+          SUPABASE_DB_URL_TECHSILON_PROD: ${{ secrets.SUPABASE_DB_URL_TECHSILON_PROD }}
+          SUPABASE_DB_URL_NATNLAB_DEV: ${{ secrets.SUPABASE_DB_URL_NATNLAB_DEV }}
+          SUPABASE_DB_URL_NATNLAB_PROD: ${{ secrets.SUPABASE_DB_URL_NATNLAB_PROD }}
+          SUPABASE_DB_URL_POLYSILON_DEV: ${{ secrets.SUPABASE_DB_URL_POLYSILON_DEV }}
+          SUPABASE_DB_URL_POLYSILON_PROD: ${{ secrets.SUPABASE_DB_URL_POLYSILON_PROD }}
 
+      # `if: always()` is load-bearing. This step keeps the repo active so GitHub does not
+      # auto-disable the schedule after 60 days of inactivity (public-repo rule). Without
+      # always(), a single bad credential fails the ping step and silently switches off the
+      # very protection that stops the whole job being disabled -- which is exactly what
+      # happened between 2026-08-18 and 2026-09-04.
       - name: Keep repo active (avoid GitHub's 60-day scheduled-workflow auto-disable)
+        if: always()
         run: |
           mkdir -p state
           date -u +"%Y-%m-%dT%H:%M:%SZ" > state/last-run.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add state/last-run.txt
-          git commit -m "chore: keepalive heartbeat [skip ci]" || echo "nothing to commit"
-          git push || echo "push skipped"
+          git commit -m "chore: keepalive heartbeat [skip ci]" || {
+            echo "nothing to commit"; exit 0;
+          }
+          # Deliberately NOT `|| true`: a persistently failing push means the repo goes quiet
+          # and the schedule gets auto-disabled 60 days later. Fail loudly instead.
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main

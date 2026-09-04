@@ -26,20 +26,68 @@ Per project, each run:
 Connection is direct Postgres over the **IPv4 pooler** string (`prepare:false` → transaction-pooler
 safe). GitHub Actions is IPv4-only; Supabase "direct" is IPv6-only, so the pooler string is required.
 
+A failure in one project — bad credential, unparseable URL, unreachable host — is contained to
+that project. Every other project still gets pinged, and the run exits non-zero so the failure
+is visible.
+
 ## Onboard a new project or account
 
 Works for any Supabase project in any account — a Supabase account is **not** a GitHub
-account, so this one repo can keep alive projects from all of your accounts. Onboarding is
-config + one secret; **no workflow edit is ever needed** (all secrets reach the job via
-`toJSON(secrets)`, masked in logs).
+account, so this one repo can keep alive projects from all of your accounts.
 
-> **Do the secret (Step 3) before the config (Step 1).** A project listed in `projects.json`
-> with no matching secret counts as a *failure*, which fails the whole run — and a failed run
-> also skips the heartbeat commit.
+Three edits, **in this order**. The order matters: a project listed in `projects.json` with no
+matching secret counts as a *failure*, which fails the whole run.
 
-### Step 1 — Register it in `projects.json`
+### Step 1 — Get the project's IPv4 pooler connection string
 
-Copy an existing block, paste it into the `projects` array, and update the fields:
+1. Open the project in the [Supabase dashboard](https://supabase.com/dashboard).
+2. Click **Connect** (top bar).
+3. Connection method **Transaction pooler**, Type **URI**. It looks like:
+   ```
+   postgresql://postgres.<ref>:[YOUR-PASSWORD]@aws-<n>-<region>.pooler.supabase.com:6543/postgres
+   ```
+   - ✅ Must contain `…pooler.supabase.com` — the **IPv4** path GitHub Actions needs.
+   - ❌ Not **Direct connection** (`db.<ref>.supabase.co`) — IPv6-only, fails in Actions.
+   - ⚠️ Ignore the *"Transaction pooler uses IPv6 by default"* banner and do **not** buy the
+     IPv4 add-on. It applies to the direct connection only. See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#ipv4-vs-ipv6--ignore-the-dashboard-banner).
+4. Replace `[YOUR-PASSWORD]` (brackets included) with the real database password, and
+   **percent-encode `#` `/` `?` `%` if the password contains them** — see
+   [the four characters](TROUBLESHOOTING.md#password-encoding--the-four-characters).
+   Every other character is safe as-is.
+5. Verify before going further:
+   ```powershell
+   # put it in .env.local first (gitignored)
+   node --env-file=.env.local inspect-url.mjs SUPABASE_DB_URL_MY_PROJECT   # structure
+   node --env-file=.env.local keepalive.mjs                                # real connection
+   ```
+
+### Step 2 — Add the secret
+
+```powershell
+gh secret set SUPABASE_DB_URL_MY_PROJECT --repo techsilon-apps/keepalive-functions
+```
+
+Paste at the prompt — the value never enters shell history and PowerShell cannot mangle a `$`
+in it. **Never pipe it or wrap it in double quotes.** Convention: `SUPABASE_DB_URL_<PROJECT>`,
+uppercase.
+
+Or via the web UI: repo → **Settings → Secrets and variables → Actions → New repository secret**.
+
+### Step 3 — Pass the secret to the job
+
+Add one line to the `env:` block of the *Ping all projects* step in
+`.github/workflows/keepalive.yml`:
+
+```yaml
+SUPABASE_DB_URL_MY_PROJECT: ${{ secrets.SUPABASE_DB_URL_MY_PROJECT }}
+```
+
+> **Do not** replace these explicit lines with `SECRETS_JSON: ${{ toJSON(secrets) }}`. It makes
+> onboarding config-only, but GitHub's workflow scanner reads it as a possible exfiltration
+> pattern and silently blocks the run — no jobs, no logs, no email. That took the keepalive
+> down for three days. The comment in the workflow says the same thing; leave it there.
+
+### Step 4 — Register it in `projects.json`
 
 ```json
 {
@@ -50,72 +98,55 @@ Copy an existing block, paste it into the `projects` array, and update the field
 ```
 
 - **`label`** — any human name for logs (e.g. `sideproject-prod`).
-- **`envVar`** — the exact name of the GitHub secret you'll create in Step 3. Convention:
-  `SUPABASE_DB_URL_<PROJECT>`, uppercase, no spaces.
+- **`envVar`** — must match the secret name from Step 2 exactly.
 - **`sampleTables`** — *optional*. Schema-qualified tables to also read a row-count from each
-  run (e.g. `"public.profiles"`, `"pulsilon.checks"`). Leave `[]` if unsure — the heartbeat
-  table's own write/read/delete is enough to count as activity. Missing tables are harmless
-  (guarded), so nothing breaks if a name is wrong.
+  run (e.g. `"public.profiles"`). Leave `[]` if unsure — the heartbeat table's own
+  write/read/delete is enough to count as activity. Missing tables are harmless (guarded), and
+  names that aren't plain identifiers are rejected rather than executed.
+  **On a public repo these counts appear in world-readable Actions logs** — leave `[]` for
+  anything business-sensitive.
 - Optional: add `"enabled": false` to park a project without deleting its block.
 
-### Step 2 — Get that project's IPv4 pooler connection string
+### Step 5 — Verify
 
-1. Open the project in the [Supabase dashboard](https://supabase.com/dashboard).
-2. Click **Connect** (top bar).
-3. Under **Connection string**, choose the **Transaction pooler** tab (Session pooler also
-   works — both are IPv4). It looks like:
-   ```
-   postgres://postgres.<ref>:[YOUR-PASSWORD]@aws-<n>-<region>.pooler.supabase.com:6543/postgres
-   ```
-   - ✅ Must contain `…pooler.supabase.com` — that is the **IPv4** path GitHub Actions needs.
-   - ❌ Do **not** use **Direct connection** (`db.<ref>.supabase.co`) — it is IPv6-only and
-     fails in Actions.
-4. Replace `[YOUR-PASSWORD]` with the project's real database password. If you don't have it:
-   **Settings → Database → Database password → Reset database password** generates a new one
-   (safe to reset as long as nothing live is currently using the old password).
-
-### Step 3 — Add the secret (named exactly the `envVar`)
-
-Easiest via the web UI (keeps the value out of shell history):
-
-> repo → **Settings → Secrets and variables → Actions → New repository secret** →
-> name = the `envVar` from Step 1, value = the full pooler URL from Step 2.
-
-Or via CLI:
+Push, then Actions tab → *supabase-keepalive* → **Run workflow**, or:
 
 ```bash
-echo "postgres://postgres.<ref>:<password>@aws-<n>-<region>.pooler.supabase.com:6543/postgres" \
-  | gh secret set SUPABASE_DB_URL_MY_PROJECT --repo <owner>/keepalive-functions
+gh workflow run keepalive.yml --repo techsilon-apps/keepalive-functions
 ```
 
-### Step 4 — Verify
-
-Commit/push the `projects.json` change, then Actions tab → *supabase-keepalive* →
-**Run workflow**. The log should show `OK my-project: wrote #… heartbeats=… …`.
+The log should show `OK my-project: wrote #… heartbeats=… …` and the run should conclude
+**success**.
 
 ## Schedule
 
 `.github/workflows/keepalive.yml` runs daily (`cron: '17 6 * * *'`) + manual
 **Run workflow** button. Daily keeps a comfortable margin under the 7-day threshold even
 if a scheduled run is delayed or dropped. A tiny heartbeat commit each run keeps the repo
-active so GitHub never auto-disables the schedule (its 60-day-inactivity rule).
+active so GitHub never auto-disables the schedule (its 60-day-inactivity rule for public
+repos). That step runs `if: always()` — it must not be switched off by a failing ping.
 
-**Public repo** is recommended (unlimited Actions minutes; the repo holds no secrets). The
-only rule: triggers stay `schedule` + `workflow_dispatch` — **never** `pull_request`, so
-forked PRs can't reach the secrets.
+**Public repo** is recommended (unlimited Actions minutes; private-repo minutes are drawn from
+an allowance shared across the whole org). The repo holds no secrets. Two rules:
+
+- Triggers stay `schedule` + `workflow_dispatch` — **never** `pull_request`, so forked PRs
+  can't reach the secrets.
+- Actions logs are world-readable, so keep `sampleTables` empty for sensitive tables.
 
 ## Test it
 
 - **Manually:** Actions tab → *supabase-keepalive* → **Run workflow**. Check the log for
   `OK <project>: wrote #… heartbeats=… pruned=… samples=…`.
-- **Locally:** copy `.env.example` → `.env`, fill the pooler URLs, then `pnpm keepalive:local`.
+- **Locally:** copy `.env.example` → `.env.local`, fill in the pooler URLs, then
+  `npm run keepalive:local`.
 - **Verify in Supabase:** `select * from keepalive.heartbeat order by ran_at desc limit 5;`
 
-## Currently registered
+## When something breaks
 
-| Project | Secret |
-|---|---|
-| `techsilon-dev` | `SUPABASE_DB_URL_TECHSILON_DEV` |
-| `techsilon-prod` | `SUPABASE_DB_URL_TECHSILON_PROD` |
-| `natnlab-dev` | `SUPABASE_DB_URL_NATNLAB_DEV` |
-| `natnlab-prod` | `SUPABASE_DB_URL_NATNLAB_PROD` |
+See **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** — symptom-to-cause table, the password
+encoding rules, the IPv4/IPv6 question, and the two ways this job has stopped silently.
+
+## Registered projects
+
+See [`projects.json`](projects.json) — it is the single source of truth. Confirm the matching
+secrets exist with `gh secret list --repo techsilon-apps/keepalive-functions`.
