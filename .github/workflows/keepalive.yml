@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write # for the heartbeat commit that keeps the repo active
+  issues: write # for the failure issue that makes a broken run impossible to miss
 
 concurrency:
   group: keepalive
@@ -68,3 +69,75 @@ jobs:
           # and the schedule gets auto-disabled 60 days later. Fail loudly instead.
           git pull --rebase --autostash origin main
           git push origin HEAD:main
+
+      # ---------------------------------------------------------------------------------
+      # Notification. Two independent mechanisms, because they catch different failures.
+      #
+      #   (1) The issue below fires when the job RAN and something in it failed.
+      #   (2) The dead-man's-switch ping fires by its ABSENCE, and is the only thing that
+      #       can catch a run that never dispatched at all -- GitHub blocking the workflow
+      #       (`action_required`), the schedule being auto-disabled, the repo being archived.
+      #       Both of the 2026-08/09 outages were that second kind, which is why email from
+      #       GitHub was never going to be enough: there was no run to email about.
+      # ---------------------------------------------------------------------------------
+
+      - name: Open or update the failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create keepalive-failure --color B60205 \
+            --description "Automated: the keepalive job is failing" 2>/dev/null || true
+
+          body="The scheduled Supabase keepalive failed.
+
+          Run: $RUN_URL
+          When: $(date -u +"%Y-%m-%d %H:%M:%SZ")
+
+          Projects pause after ~7 days without a successful ping, so this needs attention
+          within days, not weeks. Start with TROUBLESHOOTING.md -- the symptom table maps
+          each error string to its cause."
+
+          existing=$(gh issue list --label keepalive-failure --state open \
+            --limit 1 --json number --jq '.[0].number // empty')
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+            echo "commented on existing issue #$existing"
+          else
+            gh issue create --title "keepalive is failing" \
+              --label keepalive-failure --body "$body"
+          fi
+
+      - name: Close the failure issue on recovery
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          existing=$(gh issue list --label keepalive-failure --state open \
+            --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --comment "Recovered: all projects pinged successfully. $RUN_URL"
+            echo "closed issue #$existing"
+          else
+            echo "no open failure issue"
+          fi
+
+      # Dead man's switch. Pings ONLY on full success, so silence is the alarm: if this job
+      # fails, is blocked, or never runs, the ping stops arriving and the monitoring service
+      # alerts. Opt-in -- with no HEALTHCHECK_PING_URL secret set, this is a no-op and says so.
+      - name: Dead man's switch ping
+        if: success()
+        env:
+          PING_URL: ${{ secrets.HEALTHCHECK_PING_URL }}
+        run: |
+          if [ -z "$PING_URL" ]; then
+            echo "HEALTHCHECK_PING_URL not set -- external watchdog is NOT active."
+            echo "Until it is, a run that never dispatches will go unnoticed."
+            echo "See tasks/NEXT_PRIORITIES.md for the one-time setup."
+            exit 0
+          fi
+          curl -fsS -m 10 --retry 3 "$PING_URL" > /dev/null
+          echo "pinged external watchdog"

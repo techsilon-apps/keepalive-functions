@@ -73,6 +73,17 @@ else ok('no pull_request trigger')
 if (/npm ci/.test(wfCode)) ok('workflow uses npm ci')
 else bad('workflow should use `npm ci`, not `npm install`')
 
+// Regression guards: a failure here is silent by default. Both notification paths
+// must survive future edits, or the job goes back to failing unnoticed for weeks.
+if (/if:\s*failure\(\)/.test(wfCode)) ok('workflow notifies on failure')
+else bad('workflow lost its `if: failure()` notification step -- failures would go unnoticed')
+
+if (/issues:\s*write/.test(wfCode)) ok('workflow can open the failure issue (issues: write)')
+else bad('workflow lacks `issues: write` -- the failure notification cannot open an issue')
+
+if (/HEALTHCHECK_PING_URL/.test(wfCode)) ok('dead-man\'s-switch ping step present')
+else bad('workflow lost the dead-man\'s-switch ping -- a run that never dispatches would go unnoticed')
+
 // --- config and workflow agree --------------------------------------------
 for (const p of cfg.projects) {
   if (wfCode.includes(`${p.envVar}:`)) ok(`${p.label}: workflow passes ${p.envVar}`)
