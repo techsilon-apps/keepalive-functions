@@ -70,6 +70,13 @@ Each rule below exists because something actually broke. The story is the reason
     secret is exactly how this job ran broken for 18 days.
 12. **Verify by running, not by reading metadata.** `gh secret list` timestamps have been
     observed lagging a just-updated secret. A real run is the only proof.
+13. **Never remove either notification path.** The `if: failure()` issue step and the dead
+    man's switch are the only reasons a broken keepalive reaches a human — GitHub's own
+    failure email demonstrably did not, for 18 days. `npm run check` guards both.
+14. **Alerting changes must be proven by a seeded failure, never by reading the YAML.** The
+    verified method: add a project entry plus its workflow `env:` line but no secret, so the
+    run fails deterministically without touching a real credential; confirm the issue opens;
+    revert; confirm it closes.
 
 ---
 
@@ -102,8 +109,11 @@ Each rule below exists because something actually broke. The story is the reason
 - **Only four characters need percent-encoding in a password** (`#` `/` `?` `%`). Encoding
   anything else *breaks* it. Getting this wrong produces errors that name neither the project
   nor the password.
-- **A failure here is silent by default.** Nobody is watching. That is the standing weakness
-  of this project — see `tasks/NEXT_PRIORITIES.md`.
+- **Two notification paths, and they catch different things.** A failed run opens/updates a
+  deduplicated `keepalive-failure` issue (a successful run closes it). But a run that never
+  *dispatches* produces no job and therefore no notification — only the dead man's switch
+  catches that, and it is active only when the `HEALTHCHECK_PING_URL` secret is set. Check
+  the tail of any run's log: it says explicitly when the watchdog is not active.
 
 ### Repo map
 

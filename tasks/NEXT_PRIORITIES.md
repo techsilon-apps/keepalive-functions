@@ -34,6 +34,8 @@ trusting any line below.*
 - **Six projects** registered and pinging green: techsilon-dev/prod, natnlab-dev/prod,
   polysilon-dev/prod. Authoritative list: `projects.json`.
 - All secrets present and verified by a real run concluding `success`.
+- **Failure notification is live** for runs that fail. The watchdog for runs that never start
+  is built but inactive until `HEALTHCHECK_PING_URL` is set -- see Priority 1.
 - `sampleTables` is empty for every project — no row counts leak into public Actions logs.
 - techsilon-prod's database password was rotated on 2026-09-04 and its secret updated;
   confirmed working by a live run.
@@ -70,19 +72,29 @@ database — that has to be solved as part of this, not after.
 
 ## Priority sequence
 
-### Priority 1 — Failure notification (not started)
+### Priority 1 — Failure notification (in-job DONE; watchdog needs one manual step)
 
-**The standing weakness.** This job is designed to be ignored, and in August it failed for 18
-days with nobody noticing. Every fix so far makes failures *visible in the logs*; none of
-them makes a failure *reach a human*.
+**Done and verified 2026-09-04** (`497051d`): a failed run opens or comments on a
+deduplicated `keepalive-failure` issue, and a successful run closes it. Proven end to end by
+seeding a controlled failure -- issue #1 opened, a second failing run commented rather than
+duplicating, the recovery run closed it.
 
-- [ ] Decide the channel (email is already on by default and demonstrably insufficient —
-      consider a webhook, an issue-opener action, or the `alerting-infra` skill's routing)
-- [ ] Add a notify-on-failure step to `keepalive.yml`, gated `if: failure()`
-- [ ] Cover the harder case too: runs that never dispatch (`action_required`) produce no job
-      and therefore no in-job notification. A separate watchdog is needed for "no successful
-      run in N days"
-- [ ] Verify by deliberately failing one project and confirming the alert arrives
+**Still open — the half that actually matters.** A run that never *dispatches* produces no
+job, so no in-job step can report it. Both August/September outages were that kind. The dead
+man's switch is built and wired, but inert until a secret exists:
+
+- [ ] **Create a cron-monitor check** (healthchecks.io free tier is the standard choice;
+      Better Stack or Cronitor equivalent). Period 1 day, grace ~6 hours. It hands back a
+      ping URL.
+- [ ] `gh secret set HEALTHCHECK_PING_URL --repo techsilon-apps/keepalive-functions`
+- [ ] Run the workflow; the last log line should read `pinged external watchdog` instead of
+      `HEALTHCHECK_PING_URL not set -- external watchdog is NOT active.`
+- [ ] Prove the alarm fires: pause the check or skip a day, confirm the alert arrives on a
+      channel actually read (email is already known to be insufficient here -- consider SMS
+      or push)
+
+Until that secret exists, the repo is protected against "the job ran and broke" but **not**
+against "the job stopped running", which is the failure mode that has actually happened.
 
 ### Priority 2 — Reduce heartbeat commit noise (not started)
 
@@ -120,6 +132,8 @@ line is pure boilerplate.
 | 7 reliability fixes + `TROUBLESHOOTING.md` + `inspect-url.mjs` | `1c1d56b` |
 | Register polysilon-dev / polysilon-prod | `c94494e` |
 | Stop publishing row counts to public logs | `a57f629` |
+| Adopt documentation standard + `npm run check` | `bdd2aa8` |
+| Failure issue + dead man's switch (Priority 1) | `497051d` |
 
 ---
 
