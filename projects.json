@@ -30,6 +30,11 @@
       "label": "polysilon-prod",
       "envVar": "SUPABASE_DB_URL_POLYSILON_PROD",
       "sampleTables": []
+    },
+    {
+      "label": "alerting-selftest",
+      "envVar": "SUPABASE_DB_URL_ALERTING_SELFTEST",
+      "sampleTables": []
     }
   ]
 }
