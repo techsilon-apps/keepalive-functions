@@ -112,8 +112,10 @@ Each rule below exists because something actually broke. The story is the reason
 - **Two notification paths, and they catch different things.** A failed run opens/updates a
   deduplicated `keepalive-failure` issue (a successful run closes it). But a run that never
   *dispatches* produces no job and therefore no notification — only the dead man's switch
-  catches that, and it is active only when the `HEALTHCHECK_PING_URL` secret is set. Check
-  the tail of any run's log: it says explicitly when the watchdog is not active.
+  catches that: the job pings healthchecks.io only on full success, and that check alerts
+  Telegram if no ping arrives within ~30 hours. It is active only while the
+  `HEALTHCHECK_PING_URL` secret is set -- the tail of any run's log says explicitly which
+  state it is in.
 
 ### Repo map
 

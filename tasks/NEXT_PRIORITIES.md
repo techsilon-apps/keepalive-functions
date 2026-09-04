@@ -34,8 +34,8 @@ trusting any line below.*
 - **Six projects** registered and pinging green: techsilon-dev/prod, natnlab-dev/prod,
   polysilon-dev/prod. Authoritative list: `projects.json`.
 - All secrets present and verified by a real run concluding `success`.
-- **Failure notification is live** for runs that fail. The watchdog for runs that never start
-  is built but inactive until `HEALTHCHECK_PING_URL` is set -- see Priority 1.
+- **Failure notification is fully live and tested**: GitHub issue for failed runs, plus a
+  healthchecks.io dead man's switch alerting Telegram if the job stops running at all.
 - `sampleTables` is empty for every project — no row counts leak into public Actions logs.
 - techsilon-prod's database password was rotated on 2026-09-04 and its secret updated;
   confirmed working by a live run.
@@ -72,29 +72,30 @@ database — that has to be solved as part of this, not after.
 
 ## Priority sequence
 
-### Priority 1 — Failure notification (in-job DONE; watchdog needs one manual step)
+### Priority 1 — Failure notification (DONE, verified end to end 2026-09-04)
 
-**Done and verified 2026-09-04** (`497051d`): a failed run opens or comments on a
-deduplicated `keepalive-failure` issue, and a successful run closes it. Proven end to end by
-seeding a controlled failure -- issue #1 opened, a second failing run commented rather than
+Two independent mechanisms, because they catch different failures. Both proven by deliberate
+tests, not by reading the config.
+
+**In-job failure -> GitHub issue** (`497051d`). A failed run opens or comments on a
+deduplicated `keepalive-failure` issue; a successful run closes it. Verified by seeding a
+registered project with no secret: issue #1 opened, a second failure commented rather than
 duplicating, the recovery run closed it.
 
-**Still open — the half that actually matters.** A run that never *dispatches* produces no
-job, so no in-job step can report it. Both August/September outages were that kind. The dead
-man's switch is built and wired, but inert until a secret exists:
+**Job stops running -> dead man's switch.** The job pings healthchecks.io only on full
+success, so silence is the alarm. This is the only mechanism that can catch a run which never
+dispatches -- `action_required`, the schedule being auto-disabled, the repo being archived --
+which is how this job has actually broken. Verified by sending a failure signal and confirming
+the Telegram alert arrived, then recovering.
 
-- [ ] **Create a cron-monitor check** (healthchecks.io free tier is the standard choice;
-      Better Stack or Cronitor equivalent). Period 1 day, grace ~6 hours. It hands back a
-      ping URL.
-- [ ] `gh secret set HEALTHCHECK_PING_URL --repo techsilon-apps/keepalive-functions`
-- [ ] Run the workflow; the last log line should read `pinged external watchdog` instead of
-      `HEALTHCHECK_PING_URL not set -- external watchdog is NOT active.`
-- [ ] Prove the alarm fires: pause the check or skip a day, confirm the alert arrives on a
-      channel actually read (email is already known to be insufficient here -- consider SMS
-      or push)
-
-Until that secret exists, the repo is protected against "the job ran and broke" but **not**
-against "the job stopped running", which is the failure mode that has actually happened.
+- Check: `supabase-keepalive` on healthchecks.io (account `admin@techsilon.com`)
+- Period 1 day, grace 6 hours -> alerts if no successful ping for ~30 hours, leaving ~5.75
+  days of margin before Supabase pauses anything
+- Channels: **Telegram DM** (primary -- phone push, near-zero background noise) and email
+  (backup). Email alone was deliberately rejected: GitHub emailed 14 times during the August
+  outage and it was not noticed.
+- Ping URL lives in the `HEALTHCHECK_PING_URL` repo secret. If it is ever unset, the run log
+  says so explicitly rather than looking healthy.
 
 ### Priority 2 — Reduce heartbeat commit noise (not started)
 
@@ -142,7 +143,7 @@ line is pure boilerplate.
 > Resume keepalive-functions. Read `CLAUDE.md`, then `tasks/NEXT_PRIORITIES.md`. First run
 > `gh run list --repo techsilon-apps/keepalive-functions --limit 10` and tell me whether the
 > job is green — if anything is failing or `action_required`, that is the whole session.
-> Otherwise start Priority 1: failure notification. Report a green/red baseline
+> Otherwise start Priority 2: reduce heartbeat commit noise. Report a green/red baseline
 > (`npm run check`) before proposing changes.
 
 ---
