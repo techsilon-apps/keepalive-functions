@@ -33,6 +33,10 @@ account, so this one repo can keep alive projects from all of your accounts. Onb
 config + one secret; **no workflow edit is ever needed** (all secrets reach the job via
 `toJSON(secrets)`, masked in logs).
 
+> **Do the secret (Step 3) before the config (Step 1).** A project listed in `projects.json`
+> with no matching secret counts as a *failure*, which fails the whole run — and a failed run
+> also skips the heartbeat commit.
+
 ### Step 1 — Register it in `projects.json`
 
 Copy an existing block, paste it into the `projects` array, and update the fields:
@@ -61,7 +65,7 @@ Copy an existing block, paste it into the `projects` array, and update the field
 3. Under **Connection string**, choose the **Transaction pooler** tab (Session pooler also
    works — both are IPv4). It looks like:
    ```
-   postgres://postgres.<ref>:[YOUR-PASSWORD]@aws-0-<region>.pooler.supabase.com:6543/postgres
+   postgres://postgres.<ref>:[YOUR-PASSWORD]@aws-<n>-<region>.pooler.supabase.com:6543/postgres
    ```
    - ✅ Must contain `…pooler.supabase.com` — that is the **IPv4** path GitHub Actions needs.
    - ❌ Do **not** use **Direct connection** (`db.<ref>.supabase.co`) — it is IPv6-only and
@@ -80,7 +84,7 @@ Easiest via the web UI (keeps the value out of shell history):
 Or via CLI:
 
 ```bash
-echo "postgres://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres" \
+echo "postgres://postgres.<ref>:<password>@aws-<n>-<region>.pooler.supabase.com:6543/postgres" \
   | gh secret set SUPABASE_DB_URL_MY_PROJECT --repo <owner>/keepalive-functions
 ```
 
@@ -113,3 +117,5 @@ forked PRs can't reach the secrets.
 |---|---|
 | `techsilon-dev` | `SUPABASE_DB_URL_TECHSILON_DEV` |
 | `techsilon-prod` | `SUPABASE_DB_URL_TECHSILON_PROD` |
+| `natnlab-dev` | `SUPABASE_DB_URL_NATNLAB_DEV` |
+| `natnlab-prod` | `SUPABASE_DB_URL_NATNLAB_PROD` |
