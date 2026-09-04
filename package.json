@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Scheduled read/write/delete keepalive for free-tier Supabase projects across any account, to prevent 7-day inactivity auto-pause.",
   "scripts": {
+    "check": "node scripts/check.mjs",
     "keepalive": "node keepalive.mjs",
     "inspect": "node --env-file=.env.local inspect-url.mjs",
     "keepalive:local": "node --env-file=.env.local keepalive.mjs"

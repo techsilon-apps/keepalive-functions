@@ -141,6 +141,12 @@ an allowance shared across the whole org). The repo holds no secrets. Two rules:
   `npm run keepalive:local`.
 - **Verify in Supabase:** `select * from keepalive.heartbeat order by ran_at desc limit 5;`
 
+## Working on this repo
+
+- **[CLAUDE.md](CLAUDE.md)** — durable rules, architecture gotchas, definition of done.
+  Read it before changing anything; `npm run check` must pass before every commit.
+- **[tasks/NEXT_PRIORITIES.md](tasks/NEXT_PRIORITIES.md)** — current status and what's next.
+
 ## When something breaks
 
 See **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** — symptom-to-cause table, the password
