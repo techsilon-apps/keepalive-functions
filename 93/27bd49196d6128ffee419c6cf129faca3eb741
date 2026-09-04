@@ -1,0 +1,38 @@
+.env.example
+  s_24695f9dc2c449::t_b9006abc38450f 1,6-11,13-14,17-18
+.github/workflows/keepalive.yml
+  s_24695f9dc2c449::t_54b1a52f0d1d94 24,26,28-29,31,36-49,51-55,57,64-70
+README.md
+  s_24695f9dc2c449::t_599e1de060181d 29-32,36-39,41-62,64,66-90,101,103-107,110,112,115,118-119,126-127,129-134,140-141,144-149,151-152
+TROUBLESHOOTING.md
+  s_24695f9dc2c449::t_d5421c27af5b2e 1-159
+inspect-url.mjs
+  s_24695f9dc2c449::t_f94e1443e7be25 1-46
+keepalive.mjs
+  s_24695f9dc2c449::t_46f22b1e58ff24 12-17,26-33,50-53,55-61,84-87,109
+package-lock.json
+  s_24695f9dc2c449::t_3124fe483f6dba 1-28
+package.json
+  s_24695f9dc2c449::t_a81fdac99a5f7d 9-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "9327bd49196d6128ffee419c6cf129faca3eb741",
+  "prompts": {},
+  "humans": {
+    "h_b0eae2c6bc2300": {
+      "author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_24695f9dc2c449": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_24695f9dc2c449",
+        "model": "unknown"
+      },
+      "human_author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  }
+}
