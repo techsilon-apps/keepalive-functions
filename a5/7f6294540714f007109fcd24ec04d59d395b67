@@ -1,0 +1,24 @@
+projects.json
+  s_9626766c32b529::t_ab63ccd0216d1d 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "a57f6294540714f007109fcd24ec04d59d395b67",
+  "prompts": {},
+  "humans": {
+    "h_b0eae2c6bc2300": {
+      "author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_9626766c32b529": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_9626766c32b529",
+        "model": "unknown"
+      },
+      "human_author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  }
+}
