@@ -48,7 +48,6 @@ jobs:
           SUPABASE_DB_URL_NATNLAB_PROD: ${{ secrets.SUPABASE_DB_URL_NATNLAB_PROD }}
           SUPABASE_DB_URL_POLYSILON_DEV: ${{ secrets.SUPABASE_DB_URL_POLYSILON_DEV }}
           SUPABASE_DB_URL_POLYSILON_PROD: ${{ secrets.SUPABASE_DB_URL_POLYSILON_PROD }}
-          SUPABASE_DB_URL_ALERTING_SELFTEST: ${{ secrets.SUPABASE_DB_URL_ALERTING_SELFTEST }}
 
       # `if: always()` is load-bearing. This step keeps the repo active so GitHub does not
       # auto-disable the schedule after 60 days of inactivity (public-repo rule). Without
