@@ -20,6 +20,16 @@
       "label": "natnlab-prod",
       "envVar": "SUPABASE_DB_URL_NATNLAB_PROD",
       "sampleTables": []
+    },
+    {
+      "label": "polysilon-dev",
+      "envVar": "SUPABASE_DB_URL_POLYSILON_DEV",
+      "sampleTables": []
+    },
+    {
+      "label": "polysilon-prod",
+      "envVar": "SUPABASE_DB_URL_POLYSILON_PROD",
+      "sampleTables": []
     }
   ]
 }
