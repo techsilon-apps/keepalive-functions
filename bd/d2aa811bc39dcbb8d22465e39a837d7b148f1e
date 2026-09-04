@@ -1,0 +1,32 @@
+CLAUDE.md
+  s_35addfded16f5b::t_169ea7004db657 1-177
+README.md
+  s_35addfded16f5b::t_fbb80f7e15a460 144-149
+package.json
+  s_35addfded16f5b::t_3f0a426ff1783b 8
+scripts/check.mjs
+  s_35addfded16f5b::t_aa9a2de1c8e6c2 1-99
+tasks/NEXT_PRIORITIES.md
+  s_35addfded16f5b::t_d0bb6b334d1263 1-148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "bdd2aa811bc39dcbb8d22465e39a837d7b148f1e",
+  "prompts": {},
+  "humans": {
+    "h_b0eae2c6bc2300": {
+      "author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_35addfded16f5b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_35addfded16f5b",
+        "model": "unknown"
+      },
+      "human_author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  }
+}
