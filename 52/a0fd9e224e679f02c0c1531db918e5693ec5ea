@@ -1,0 +1,28 @@
+.env.example
+  s_d6c0421e475c18::t_01a2556ed060c5 3,8-11
+README.md
+  s_d6c0421e475c18::t_48c806510a75aa 36-39,68,87,120-121
+projects.json
+  s_d6c0421e475c18::t_06bdaf18ec775e 13-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "52a0fd9e224e679f02c0c1531db918e5693ec5ea",
+  "prompts": {},
+  "humans": {
+    "h_b0eae2c6bc2300": {
+      "author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_d6c0421e475c18": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_d6c0421e475c18",
+        "model": "unknown"
+      },
+      "human_author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  }
+}
