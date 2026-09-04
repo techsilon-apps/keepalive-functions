@@ -1,0 +1,21 @@
+CLAUDE.md
+  s_4a21e3c15bd85c::t_e4c3954ac2ba80 115-118
+tasks/NEXT_PRIORITIES.md
+  s_4a21e3c15bd85c::t_0d943bfe02d7e9 37-38,75,77-78,80-83,85-98,146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "5b1a31f8da79cd34b2874e7b3d86016de619e64b",
+  "prompts": {},
+  "sessions": {
+    "s_4a21e3c15bd85c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_4a21e3c15bd85c",
+        "model": "unknown"
+      },
+      "human_author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  }
+}
