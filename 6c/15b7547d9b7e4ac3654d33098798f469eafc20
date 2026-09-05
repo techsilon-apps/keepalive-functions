@@ -1,0 +1,19 @@
+tasks/NEXT_PRIORITIES.md
+  s_17010c505d7a56::t_7d3f4a5929627b 93-97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "6c15b7547d9b7e4ac3654d33098798f469eafc20",
+  "prompts": {},
+  "sessions": {
+    "s_17010c505d7a56": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_17010c505d7a56",
+        "model": "unknown"
+      },
+      "human_author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  }
+}
