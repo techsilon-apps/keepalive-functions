@@ -90,7 +90,11 @@ the Telegram alert arrived, then recovering.
 
 - Check: `supabase-keepalive` on healthchecks.io (account `admin@techsilon.com`)
 - Period 1 day, grace 6 hours -> alerts if no successful ping for ~30 hours, leaving ~5.75
-  days of margin before Supabase pauses anything
+  days of margin before Supabase pauses anything.
+  **Do not tighten this grace.** Evidence: the first unattended scheduled run (2026-09-05)
+  was due at 06:17 UTC and GitHub actually started it at 10:36 UTC -- a 4.3 hour delay on an
+  ordinary day, with nothing wrong. A 1 hour grace would have false-alarmed immediately, and
+  an alarm that cries wolf gets muted, which is how the August outage went unnoticed.
 - Channels: **Telegram DM** (primary -- phone push, near-zero background noise) and email
   (backup). Email alone was deliberately rejected: GitHub emailed 14 times during the August
   outage and it was not noticed.
