@@ -30,6 +30,36 @@
       "label": "polysilon-prod",
       "envVar": "SUPABASE_DB_URL_POLYSILON_PROD",
       "sampleTables": []
+    },
+    {
+      "label": "rav-dev",
+      "envVar": "SUPABASE_DB_URL_RAV_DEV",
+      "sampleTables": []
+    },
+    {
+      "label": "rav-prod",
+      "envVar": "SUPABASE_DB_URL_RAV_PROD",
+      "sampleTables": []
+    },
+    {
+      "label": "hsnef-mp-dev",
+      "envVar": "SUPABASE_DB_URL_HSNEF_MP_DEV",
+      "sampleTables": []
+    },
+    {
+      "label": "hsnef-mp-prod",
+      "envVar": "SUPABASE_DB_URL_HSNEF_MP_PROD",
+      "sampleTables": []
+    },
+    {
+      "label": "prepmycase-mp-dev",
+      "envVar": "SUPABASE_DB_URL_PREPMYCASE_MP_DEV",
+      "sampleTables": []
+    },
+    {
+      "label": "prepmycase-mp-prod",
+      "envVar": "SUPABASE_DB_URL_PREPMYCASE_MP_PROD",
+      "sampleTables": []
     }
   ]
 }
