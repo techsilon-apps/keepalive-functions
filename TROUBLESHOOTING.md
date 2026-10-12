@@ -112,13 +112,13 @@ mechanisms have caused that, both now fixed — but check them first if projects
 
 ```bash
 # Last 10 runs — anything not "success" needs attention
-gh run list --repo techsilon-ops/keepalive-functions --limit 10
+gh run list --repo techsilon-ops/supabase-keepalive --limit 10
 
 # Why the most recent run failed
-gh run view --repo techsilon-ops/keepalive-functions --log-failed
+gh run view --repo techsilon-ops/supabase-keepalive --log-failed
 
 # Force a run now
-gh workflow run keepalive.yml --repo techsilon-ops/keepalive-functions
+gh workflow run keepalive.yml --repo techsilon-ops/supabase-keepalive
 ```
 
 In Supabase, confirm a project is actually being written to:
@@ -138,11 +138,11 @@ pinged. Tell from a single run's log: separate databases each report their **own
 
 ```powershell
 # Which secrets exist
-gh secret list --repo techsilon-ops/keepalive-functions
+gh secret list --repo techsilon-ops/supabase-keepalive
 
 # Add/update one (interactive — value never enters shell history, and PowerShell
 # cannot mangle a `$` in it). Never pipe or double-quote the URL.
-gh secret set SUPABASE_DB_URL_MY_PROJECT --repo techsilon-ops/keepalive-functions
+gh secret set SUPABASE_DB_URL_MY_PROJECT --repo techsilon-ops/supabase-keepalive
 
 # Inspect a connection string's structure (no password printed)
 node --env-file=.env.local inspect-url.mjs SUPABASE_DB_URL_MY_PROJECT

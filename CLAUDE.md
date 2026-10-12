@@ -1,4 +1,4 @@
-# keepalive-functions — Project Context for Claude
+# supabase-keepalive — Project Context for Claude
 
 **This file holds durable context and rules. It is NOT a status log.** Current work state lives in `tasks/NEXT_PRIORITIES.md` — history lives in `git log`.
 
@@ -27,7 +27,7 @@ inserts a heartbeat row, reads it back, and prunes rows older than 30 days. That
 cycle is what resets Supabase's inactivity timer — **a deploy does not count**.
 
 - **Runs:** GitHub Actions, daily at `17 6 * * *` UTC, plus manual dispatch.
-- **Repo:** `techsilon-ops/keepalive-functions`, **public** — deliberately (Actions minutes
+- **Repo:** `techsilon-ops/supabase-keepalive`, **public** — deliberately (Actions minutes
   for private repos draw from an allowance shared across the whole org).
 - **Targets:** whatever is listed in `projects.json`. That file is the single source of
   truth; do not maintain a second list anywhere.
@@ -140,9 +140,9 @@ npm run check               # REQUIRED before every commit
 npm run keepalive:local     # live test against whatever is in .env.local
 npm run inspect SUPABASE_DB_URL_X   # structure of one connection string, no password shown
 
-gh secret list --repo techsilon-ops/keepalive-functions
-gh workflow run keepalive.yml --repo techsilon-ops/keepalive-functions
-gh run list --repo techsilon-ops/keepalive-functions --limit 10
+gh secret list --repo techsilon-ops/supabase-keepalive
+gh workflow run keepalive.yml --repo techsilon-ops/supabase-keepalive
+gh run list --repo techsilon-ops/supabase-keepalive --limit 10
 ```
 
 Onboarding a new project is documented in `README.md` — secret, then workflow `env:` line,

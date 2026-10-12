@@ -1,4 +1,4 @@
-# keepalive-functions
+# supabase-keepalive
 
 Scheduled **read / write / delete** keepalive for free-tier Supabase projects — one repo
 keeps *any number* of projects, across *any number* of Supabase accounts, from being
@@ -64,7 +64,7 @@ matching secret counts as a *failure*, which fails the whole run.
 ### Step 2 — Add the secret
 
 ```powershell
-gh secret set SUPABASE_DB_URL_MY_PROJECT --repo techsilon-ops/keepalive-functions
+gh secret set SUPABASE_DB_URL_MY_PROJECT --repo techsilon-ops/supabase-keepalive
 ```
 
 Paste at the prompt — the value never enters shell history and PowerShell cannot mangle a `$`
@@ -112,7 +112,7 @@ SUPABASE_DB_URL_MY_PROJECT: ${{ secrets.SUPABASE_DB_URL_MY_PROJECT }}
 Push, then Actions tab → *supabase-keepalive* → **Run workflow**, or:
 
 ```bash
-gh workflow run keepalive.yml --repo techsilon-ops/keepalive-functions
+gh workflow run keepalive.yml --repo techsilon-ops/supabase-keepalive
 ```
 
 The log should show `OK my-project: wrote #… heartbeats=… …` and the run should conclude
@@ -155,4 +155,4 @@ encoding rules, the IPv4/IPv6 question, and the two ways this job has stopped si
 ## Registered projects
 
 See [`projects.json`](projects.json) — it is the single source of truth. Confirm the matching
-secrets exist with `gh secret list --repo techsilon-ops/keepalive-functions`.
+secrets exist with `gh secret list --repo techsilon-ops/supabase-keepalive`.
