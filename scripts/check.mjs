@@ -15,7 +15,8 @@ const ok = (m) => console.log(`  ok    ${m}`)
 const bad = (m) => { console.error(`  FAIL  ${m}`); failed++ }
 
 // --- files present --------------------------------------------------------
-for (const f of ['keepalive.mjs', 'inspect-url.mjs', 'scripts/check.mjs', 'TROUBLESHOOTING.md']) {
+for (const f of ['keepalive.mjs', 'inspect-url.mjs', 'scripts/check.mjs', 'TROUBLESHOOTING.md',
+  'scripts/report-email.mjs', 'scripts/report-email.test.mjs']) {
   if (existsSync(f)) ok(`${f} present`)
   else bad(`${f} missing`)
 }
@@ -83,6 +84,15 @@ else bad('workflow lacks `issues: write` -- the failure notification cannot open
 
 if (/HEALTHCHECK_PING_URL/.test(wfCode)) ok('dead-man\'s-switch ping step present')
 else bad('workflow lost the dead-man\'s-switch ping -- a run that never dispatches would go unnoticed')
+
+// The daily email is additive: it must report on every outcome, and must never turn a
+// good keepalive run red because Resend had a bad day.
+const emailStep = wfCode.split(/^\s*- name: /m).find((st) => st.startsWith('Email daily report')) ?? ''
+if (/if:\s*always\(\)/.test(emailStep) && /continue-on-error:\s*true/.test(emailStep)) ok('daily email runs on every outcome and cannot fail the run')
+else bad('daily email step must keep `if: always()` and `continue-on-error: true`')
+
+if (/KEEPALIVE_RESULTS:/.test(wfCode.split(/^\s*- name: /m).find((st) => st.startsWith('Ping all projects')) ?? '')) ok('ping step records per-project results for the email')
+else bad('ping step lost KEEPALIVE_RESULTS -- the email would report every project as "no result"')
 
 // --- config and workflow agree --------------------------------------------
 for (const p of cfg.projects) {

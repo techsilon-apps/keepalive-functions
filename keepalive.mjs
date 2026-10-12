@@ -17,7 +17,7 @@
 //     non-zero if any project failed.
 
 import postgres from 'postgres'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const RETAIN_DAYS = 30
 const SCHEMA = 'keepalive'
@@ -35,14 +35,23 @@ const SAFE_IDENT = /^[A-Za-z_][A-Za-z0-9_$]*(\.[A-Za-z_][A-Za-z0-9_$]*)?$/
 const runId = process.env.GITHUB_RUN_ID || 'local'
 let failures = 0
 
+// Per-project outcomes for the daily email (scripts/report-email.mjs). Written only when
+// KEEPALIVE_RESULTS names a file. Error text is scrubbed of anything URL-shaped: a
+// malformed-URL error must never carry a connection string into an inbox.
+const results = []
+const scrub = (m) => String(m ?? '').replace(/postgres(ql)?:\/\/\S+/gi, '[connection string redacted]')
+const record = (r) => results.push(r)
+
 for (const p of cfg.projects ?? []) {
   if (p.enabled === false) {
     console.log(`SKIP ${p.label}: disabled in projects.json`)
+    record({ label: p.label, outcome: 'disabled' })
     continue
   }
   const url = resolve(p.envVar)
   if (!url) {
     console.error(`SKIP ${p.label}: secret/env "${p.envVar}" is not set`)
+    record({ label: p.label, outcome: 'failed', error: `secret ${p.envVar} is not set` })
     failures++
     continue
   }
@@ -51,6 +60,7 @@ for (const p of cfg.projects ?? []) {
   // URL (e.g. an unencoded `#`, `/`, `?` or `%` in the password), and an uncaught throw
   // here would abort the whole run and leave every remaining project unpinged.
   let sql
+  const started = Date.now()
   try {
     sql = postgres(url, {
       max: 1,
@@ -102,12 +112,19 @@ for (const p of cfg.projects ?? []) {
       `OK ${p.label}: wrote #${row.id} @ ${row.ran_at.toISOString()}; ` +
         `heartbeats=${heartbeats}; pruned=${pruned.count}; samples=${JSON.stringify(samples)}`,
     )
+    record({ label: p.label, outcome: 'ok', heartbeatId: String(row.id), ranAt: row.ran_at.toISOString(),
+      heartbeats, pruned: pruned.count, samples, ms: Date.now() - started })
   } catch (e) {
     console.error(`FAIL ${p.label}: ${e.message}`)
+    record({ label: p.label, outcome: 'failed', error: scrub(e.message), ms: Date.now() - started })
     failures++
   } finally {
     if (sql) await sql.end({ timeout: 5 })
   }
+}
+
+if (process.env.KEEPALIVE_RESULTS) {
+  writeFileSync(process.env.KEEPALIVE_RESULTS, JSON.stringify(results, null, 2))
 }
 
 if (failures > 0) {

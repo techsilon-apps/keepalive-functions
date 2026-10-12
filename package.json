@@ -8,7 +8,9 @@
     "check": "node scripts/check.mjs",
     "keepalive": "node keepalive.mjs",
     "inspect": "node --env-file=.env.local inspect-url.mjs",
-    "keepalive:local": "node --env-file=.env.local keepalive.mjs"
+    "keepalive:local": "node --env-file=.env.local keepalive.mjs",
+    "test": "node --test scripts/report-email.test.mjs",
+    "email:preview": "node scripts/report-email.mjs --preview test-results/email-preview"
   },
   "dependencies": {
     "postgres": "^3.4.5"

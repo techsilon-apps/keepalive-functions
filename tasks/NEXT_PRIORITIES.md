@@ -151,7 +151,9 @@ line is pure boilerplate.
 | Adopt documentation standard + `npm run check` | `bdd2aa8` |
 | Failure issue + dead man's switch (Priority 1) | `497051d` |
 | Transferred repo to `techsilon-ops` | `eb2d721` |
-| Renamed to `supabase-keepalive` | this commit |
+| Renamed to `supabase-keepalive` | `c5b8571` |
+| Onboard rav, hsnef-mp, prepmycase-mp (dev + prod); 12/12 OK | `6aa4919` |
+| Daily branded email report (Resend) | this commit |
 
 ---
 

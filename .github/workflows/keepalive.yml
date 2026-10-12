@@ -32,8 +32,10 @@ jobs:
       - run: npm ci
 
       - name: Ping all projects (read / write / delete)
+        id: ping
         run: node keepalive.mjs
         env:
+          KEEPALIVE_RESULTS: ${{ runner.temp }}/keepalive-results.json
           # Each connection string is passed explicitly, one line per project.
           #
           # Do NOT replace this with `SECRETS_JSON: ${{ toJSON(secrets) }}`. It is tempting
@@ -61,6 +63,7 @@ jobs:
       # very protection that stops the whole job being disabled -- which is exactly what
       # happened between 2026-08-18 and 2026-09-04.
       - name: Keep repo active (avoid GitHub's 60-day scheduled-workflow auto-disable)
+        id: heartbeat
         if: always()
         run: |
           mkdir -p state
@@ -147,3 +150,37 @@ jobs:
           fi
           curl -fsS -m 10 --retry 3 "$PING_URL" > /dev/null
           echo "pinged external watchdog"
+
+      # Daily email: a third, ADDITIVE channel on top of the issue and the dead man's switch.
+      # One branded email per run, normal day or not (same layout as supabase-db-backups).
+      # `if: always()` so failures are reported too; `continue-on-error` so a Resend outage
+      # can never turn a good keepalive run red. Opt-in: no-op until the secret + vars exist.
+      - name: Email daily report
+        if: always()
+        continue-on-error: true
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          REPORT_EMAIL_TO: ${{ vars.REPORT_EMAIL_TO }}
+          REPORT_EMAIL_FROM: ${{ vars.REPORT_EMAIL_FROM }}
+          KEEPALIVE_RESULTS: ${{ runner.temp }}/keepalive-results.json
+          PING_RESULT: ${{ steps.ping.outcome }}
+          HEARTBEAT_RESULT: ${{ steps.heartbeat.outcome }}
+          EVENT: ${{ github.event_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RESEND_API_KEY:-}" ] || [ -z "${REPORT_EMAIL_TO:-}" ] || [ -z "${REPORT_EMAIL_FROM:-}" ]; then
+            echo "Daily email not configured (secret RESEND_API_KEY, variables REPORT_EMAIL_TO / REPORT_EMAIL_FROM). Skipping."
+            exit 0
+          fi
+
+          # Rendering (subject, branded HTML, plain text) lives in a tested script, not here.
+          node scripts/report-email.mjs > "$RUNNER_TEMP/email.json"
+
+          if ! response=$(curl -sS -m 20 --retry 2 --fail-with-body -X POST https://api.resend.com/emails \
+                 -H "Authorization: Bearer ${RESEND_API_KEY}" -H "Content-Type: application/json" \
+                 --data @"$RUNNER_TEMP/email.json"); then
+            echo "::warning::Daily email was NOT sent. Resend said: ${response:-<no response>}"
+            exit 1
+          fi
+          echo "daily email sent: $(jq -r .subject "$RUNNER_TEMP/email.json")"

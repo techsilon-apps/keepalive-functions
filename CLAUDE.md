@@ -38,8 +38,8 @@ cycle is what resets Supabase's inactivity timer — **a deploy does not count**
 
 Each rule below exists because something actually broke. The story is the reason it stays.
 
-1. **`npm run check` must pass before every commit.** It is the only automated gate — there
-   are no unit tests.
+1. **`npm run check` and `npm test` must pass before every commit.** `check` is the offline
+   conformance gate; `npm test` covers only the email renderer (`scripts/report-email.mjs`).
 2. **Never reintroduce `SECRETS_JSON: ${{ toJSON(secrets) }}` in the workflow.** It makes
    onboarding config-only, which is tempting. It also reads to GitHub's workflow scanner as
    a secret-exfiltration pattern: runs get marked `action_required`, **zero jobs dispatch**,
@@ -73,6 +73,8 @@ Each rule below exists because something actually broke. The story is the reason
 13. **Never remove either notification path.** The `if: failure()` issue step and the dead
     man's switch are the only reasons a broken keepalive reaches a human — GitHub's own
     failure email demonstrably did not, for 18 days. `npm run check` guards both.
+    The Resend **daily email** is a third, additive channel: it keeps `if: always()` +
+    `continue-on-error: true`, so a Resend problem can never turn a good run red.
 14. **Alerting changes must be proven by a seeded failure, never by reading the YAML.** The
     verified method: add a project entry plus its workflow `env:` line but no secret, so the
     run fails deterministically without touching a real credential; confirm the issue opens;
@@ -88,7 +90,8 @@ Each rule below exists because something actually broke. The story is the reason
 | Database client | `postgres` (postgres.js), zero-dependency, pinned via `package-lock.json` |
 | Scheduler | GitHub Actions (`.github/workflows/keepalive.yml`) |
 | Config | `projects.json` (no secrets) + one GitHub Actions secret per project |
-| Tests | **None.** `npm run check` is a static conformance gate, not a test suite. |
+| Tests | `npm test` (node:test) for the email renderer only. `npm run check` is a static gate. |
+| Email | Resend API via `curl`; branded HTML from `scripts/report-email.mjs` (layout shared with supabase-db-backups) |
 
 ### Architecture gotchas (things a new session gets wrong)
 
@@ -123,6 +126,7 @@ Each rule below exists because something actually broke. The story is the reason
 keepalive.mjs           the job itself: bootstrap, write, read, prune, per project
 inspect-url.mjs         diagnoses a connection string without printing the password
 scripts/check.mjs       `npm run check` — offline conformance + regression guards
+scripts/report-email.mjs  daily branded email renderer (`npm test`, `npm run email:preview`)
 projects.json           which projects to ping (no secrets) — single source of truth
 .env.example            local-testing template; copy to .env.local (gitignored)
 .github/workflows/      the schedule, and the explicit per-project secret env block
@@ -137,6 +141,7 @@ tasks/                  NEXT_PRIORITIES.md, the living tracker
 ```bash
 npm ci                      # install exactly what the lockfile pins
 npm run check               # REQUIRED before every commit
+npm test                    # email renderer unit tests
 npm run keepalive:local     # live test against whatever is in .env.local
 npm run inspect SUPABASE_DB_URL_X   # structure of one connection string, no password shown
 

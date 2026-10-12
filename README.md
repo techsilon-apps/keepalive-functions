@@ -133,6 +133,25 @@ an allowance shared across the whole org). The repo holds no secrets. Two rules:
   can't reach the secrets.
 - Actions logs are world-readable, so keep `sampleTables` empty for sensitive tables.
 
+## Daily email
+
+After every run, a branded TechSilon email goes to `REPORT_EMAIL_TO`: on a normal day it
+says so plainly ("Normal day: nothing needs your attention"), lists every project with its
+heartbeat and the date it would pause if pings stopped ("Safe until"), and turns red with
+the error per project when something failed. It is additive: the failure issue and the dead
+man's switch still do the alerting, and a Resend outage never fails the run.
+
+Setup (one Resend API key per repo, sending access to `updates.techsilon.com`):
+
+```
+gh secret set RESEND_API_KEY --repo techsilon-ops/supabase-keepalive          # paste at the prompt
+gh variable set REPORT_EMAIL_TO --repo techsilon-ops/supabase-keepalive --body "admin@techsilon.com"
+gh variable set REPORT_EMAIL_FROM --repo techsilon-ops/supabase-keepalive --body "Techsilon Keepalive <keepalive@updates.techsilon.com>"
+```
+
+Until all three exist the step logs "not configured" and skips. Preview the design locally
+with `npm run email:preview` (writes `test-results/email-preview/*.html`).
+
 ## Test it
 
 - **Manually:** Actions tab → *supabase-keepalive* → **Run workflow**. Check the log for
