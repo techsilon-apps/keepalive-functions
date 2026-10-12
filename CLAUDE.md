@@ -27,7 +27,7 @@ inserts a heartbeat row, reads it back, and prunes rows older than 30 days. That
 cycle is what resets Supabase's inactivity timer — **a deploy does not count**.
 
 - **Runs:** GitHub Actions, daily at `17 6 * * *` UTC, plus manual dispatch.
-- **Repo:** `techsilon-apps/keepalive-functions`, **public** — deliberately (Actions minutes
+- **Repo:** `techsilon-ops/keepalive-functions`, **public** — deliberately (Actions minutes
   for private repos draw from an allowance shared across the whole org).
 - **Targets:** whatever is listed in `projects.json`. That file is the single source of
   truth; do not maintain a second list anywhere.
@@ -140,9 +140,9 @@ npm run check               # REQUIRED before every commit
 npm run keepalive:local     # live test against whatever is in .env.local
 npm run inspect SUPABASE_DB_URL_X   # structure of one connection string, no password shown
 
-gh secret list --repo techsilon-apps/keepalive-functions
-gh workflow run keepalive.yml --repo techsilon-apps/keepalive-functions
-gh run list --repo techsilon-apps/keepalive-functions --limit 10
+gh secret list --repo techsilon-ops/keepalive-functions
+gh workflow run keepalive.yml --repo techsilon-ops/keepalive-functions
+gh run list --repo techsilon-ops/keepalive-functions --limit 10
 ```
 
 Onboarding a new project is documented in `README.md` — secret, then workflow `env:` line,
@@ -185,5 +185,5 @@ Work is finished only when ALL of these hold:
 - `TROUBLESHOOTING.md` — symptom table, password encoding, IPv4/IPv6, silent-stoppage checks
 - `README.md` — what it is and how to onboard a project
 
-*Durable-context file last reviewed: 2026-09-04. If this file and reality disagree, trust
+*Durable-context file last reviewed: 2026-10-12 (org move). If this file and reality disagree, trust
 `git log` + `tasks/NEXT_PRIORITIES.md`, then fix this file.*

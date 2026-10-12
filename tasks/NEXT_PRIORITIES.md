@@ -3,7 +3,7 @@
 **READ THIS FIRST when resuming a session.** Single source of truth for "what's the order of
 work right now?" Durable rules live in `CLAUDE.md`.
 
-*Last updated: 2026-09-04*
+*Last updated: 2026-10-12*
 
 ---
 
@@ -16,7 +16,7 @@ work right now?" Durable rules live in `CLAUDE.md`.
    ```
 2. **Is the job actually green?** This is the check that matters most:
    ```bash
-   gh run list --repo techsilon-apps/keepalive-functions --limit 10
+   gh run list --repo techsilon-ops/keepalive-functions --limit 10
    ```
    Anything not `success` needs attention *today* — projects pause ~7 days after their last
    real query. If runs show `action_required`, open the run page: GitHub is blocking
@@ -26,7 +26,14 @@ work right now?" Durable rules live in `CLAUDE.md`.
 
 ---
 
-## Status snapshot (as of 2026-09-04)
+## Status snapshot (as of 2026-09-04, location updated 2026-10-12)
+
+- **2026-10-12: transferred `techsilon-apps/keepalive-functions` → `techsilon-ops/keepalive-functions`.**
+  All 7 secrets carried over, the workflow stayed `active`, and a dispatched run in the new org
+  concluded `success` (all 6 projects `OK`, heartbeat pushed, watchdog pinged). Old URLs
+  redirect. Local clone now at `C:\Repos\gh-techsilon-ops\keepalive-functions`. Still to see:
+  the first **scheduled** run in the new org. Sibling repo `techsilon-ops/supabase-db-backups`
+  takes daily pg_dumps of the same fleet.
 
 *If this date is more than a few weeks old, verify against `gh run list` and `git log` before
 trusting any line below.*
@@ -57,7 +64,8 @@ Private would stop Actions logs being world-readable and remove the fork-PR risk
 entirely. Rejected for now because Actions minutes for private repos draw from an allowance
 shared across the whole `techsilon-apps` org (8–10 repos), and this would not be the only
 repo to go private. Mitigated instead by emptying `sampleTables`. Revisit if the org's
-private-minutes position changes.
+private-minutes position changes. *2026-10-12: the repo now lives in `techsilon-ops` (also
+GitHub Free, shared with `supabase-db-backups`, which is private), so the same reasoning holds.*
 
 ### 2. Dedicated least-privilege Postgres role — *deferred 2026-09-04*
 
@@ -139,13 +147,14 @@ line is pure boilerplate.
 | Stop publishing row counts to public logs | `a57f629` |
 | Adopt documentation standard + `npm run check` | `bdd2aa8` |
 | Failure issue + dead man's switch (Priority 1) | `497051d` |
+| Transferred repo to `techsilon-ops` | this commit |
 
 ---
 
 ## Session-resume prompt (copy-paste when you come back)
 
 > Resume keepalive-functions. Read `CLAUDE.md`, then `tasks/NEXT_PRIORITIES.md`. First run
-> `gh run list --repo techsilon-apps/keepalive-functions --limit 10` and tell me whether the
+> `gh run list --repo techsilon-ops/keepalive-functions --limit 10` and tell me whether the
 > job is green — if anything is failing or `action_required`, that is the whole session.
 > Otherwise start Priority 2: reduce heartbeat commit noise. Report a green/red baseline
 > (`npm run check`) before proposing changes.
