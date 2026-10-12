@@ -1,0 +1,26 @@
+.github/workflows/keepalive.yml
+  s_bef2a35e46e87c::t_d3d30580c8faf7 51-56
+projects.json
+  s_bef2a35e46e87c::t_bd28c2ce990a22 33-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6aa4919e62742c5d23cd89f0951c1de128c7a8cd",
+  "prompts": {},
+  "humans": {
+    "h_b0eae2c6bc2300": {
+      "author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_bef2a35e46e87c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_bef2a35e46e87c",
+        "model": "unknown"
+      },
+      "human_author": "Sujit Gangadharan <gsujit@gmail.com>"
+    }
+  }
+}
